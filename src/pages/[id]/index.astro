@@ -1,0 +1,51 @@
+---
+import params from "./_params.json";
+import { z } from "zod";
+
+export function getStaticPaths() {
+  return params;
+}
+
+const { id } = Astro.params;
+const api_link: string =
+  "https://food-recipes-api.onrender.com/food-recipe/" + id;
+const res = await fetch(api_link);
+const data = await res.json();
+
+const RecipeSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  minutes: z.number(),
+  tags: z.array(z.string()),
+  nutrition: z.array(z.number()),
+  steps: z.array(z.string()),
+  ingredients: z.array(z.string()),
+});
+const validated = RecipeSchema.safeParse(data);
+if (!validated.success) {
+  return Astro.redirect("/404");
+}
+
+const recipe = validated.data;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Astro</title>
+  </head>
+  <body>
+    <h1>{recipe.name}</h1>
+    <p>{recipe.description}</p>
+    <h2>Time usage: {recipe.minutes} minutes</h2>
+    <h3>{recipe.nutrition}</h3>
+    <p>{recipe.tags}</p>
+    <h2>Ingredients</h2>
+    <p>{recipe.ingredients}</p>
+    <h2>Steps</h2>
+    <p>{recipe.steps}</p>
+  </body>
+</html>
